@@ -1,0 +1,47 @@
+{
+  "name": "motomedialab/laravel-self-healing-urls",
+  "description": "Generate self-healing URLs for models",
+  "keywords": [
+    "motomedialab",
+    "laravel-self-healing-urls"
+  ],
+  "homepage": "https://github.com/motomedialab/laravel-self-healing-urls",
+  "license": "MIT",
+  "type": "library",
+  "authors": [
+    {
+      "name": "Chris Page",
+      "email": "hello@motocom.co.uk",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": "^8.1",
+    "illuminate/database": "^8.0|^9.0|^10.0"
+  },
+  "require-dev": {
+    "laravel/pint": "^1.13",
+    "nunomaduro/larastan": "^2.0",
+    "orchestra/testbench": "^v8.15.0",
+    "phpunit/phpunit": "^10.4.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "Motomedialab\\LaravelSelfHealingUrls\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Motomedialab\\LaravelSelfHealingUrls\\Tests\\": "tests"
+    }
+  },
+  "scripts": {
+    "test": "vendor/bin/phpunit",
+    "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "extra": {
+  }
+}
