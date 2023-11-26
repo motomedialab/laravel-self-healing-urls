@@ -105,7 +105,7 @@ public function getRouteBindingKeyName(): string
 ##### Override the way the unique ID is generated:
 
 ```php
-public function getRouteBindingKeyName(): string
+public function getRouteBindingKey(): string
 {
     return Str::random(4); // generate random four character binding key
 }
