@@ -25,9 +25,13 @@ trait HasSelfHealingUrls
             return null;
         }
 
-        return $table->string($column)
-            ->after($model->getKeyName())
-            ->unique();
+        $migration = $table->string($column);
+
+        if (! $table->creating()) {
+            $migration->after($model->getKeyName());
+        }
+
+        return $migration->unique();
     }
 
     /**
@@ -50,7 +54,7 @@ trait HasSelfHealingUrls
 
             if ($attempts > 3) {
                 throw new \Exception(
-                    class_basename($model) . '::generateHealingUniqueId does not have enough ' .
+                    class_basename($model).'::generateHealingUniqueId does not have enough '.
                     'entropy and failed URL generation. This method should generate a very random ID.'
                 );
             }
@@ -91,7 +95,7 @@ trait HasSelfHealingUrls
      */
     public function getRouteKey(): string
     {
-        return $this->getRouteBindingSlug() . '-' . $this->getRouteBindingKey();
+        return $this->getRouteBindingSlug().'-'.$this->getRouteBindingKey();
     }
 
     /**
