@@ -8,7 +8,7 @@ class TestCase extends BaseTestCase
 {
     protected function defineDatabaseMigrations(): void
     {
-        $this->loadMigrationsFrom(__DIR__ . '/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/migrations');
     }
 
     protected function defineEnvironment($app)

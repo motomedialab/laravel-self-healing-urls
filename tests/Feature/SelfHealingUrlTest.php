@@ -31,7 +31,7 @@ class SelfHealingUrlTest extends TestCase
         $value = route('test-model-show', $model);
 
         $this->assertStringEndsWith(
-            '/test-path/' . Str::slug($model->name) . '-' . $model->route_binding_id,
+            '/test-path/'.Str::slug($model->name).'-'.$model->route_binding_id,
             $value
         );
     }
@@ -59,7 +59,7 @@ class SelfHealingUrlTest extends TestCase
     {
         $model = TestModel::factory()->create();
 
-        $this->get('/test-path-unbound/' . $model->getKey())
+        $this->get('/test-path-unbound/'.$model->getKey())
             ->assertStatus(200)
             ->assertSee($model->name);
     }

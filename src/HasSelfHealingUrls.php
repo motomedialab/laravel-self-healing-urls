@@ -27,7 +27,7 @@ trait HasSelfHealingUrls
 
         $migration = $table->string($column);
 
-        if (!$table->creating()) {
+        if (! $table->creating()) {
             $migration->after($model->getKeyName());
         }
 
@@ -44,7 +44,7 @@ trait HasSelfHealingUrls
         $exists = function (self $model) use ($attempts) {
             if ($attempts > 3) {
                 throw new \Exception(
-                    class_basename($model) . '::generateHealingUniqueId does not have enough ' .
+                    class_basename($model).'::generateHealingUniqueId does not have enough '.
                     'entropy and failed URL generation. This method should generate a very random ID.'
                 );
             }
@@ -114,7 +114,7 @@ trait HasSelfHealingUrls
             return parent::getRouteKey();
         }
 
-        return $this->getRouteBindingSlug() . '-' . $this->getRouteBindingKey();
+        return $this->getRouteBindingSlug().'-'.$this->getRouteBindingKey();
     }
 
     /**
@@ -132,7 +132,6 @@ trait HasSelfHealingUrls
     {
         return substr(uniqid(), -8);
     }
-
 
     /**
      * Extract our binding parameters.
