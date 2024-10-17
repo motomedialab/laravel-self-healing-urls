@@ -2,7 +2,7 @@ name: run-tests
 
 on:
   pull_request:
-    branches: [main]
+    branches: [master]
 
 jobs:
   test:
@@ -10,10 +10,10 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ ubuntu-latest ]
-        php: [ 8.1,8.2,8.3,8.4 ]
-        laravel: [ 8.*,9.*,10.*,11.* ]
-        stability: [ prefer-stable ]
+        os: [ubuntu-latest]
+        php: [8.0,8.1,8.2,8.3,8.4]
+        laravel: [8.*,9.*,10.*,11.*]
+        stability: [prefer-stable]
         exclude:
           - laravel: 10.*
             php: 8.0
@@ -35,16 +35,13 @@ jobs:
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
           coverage: none
 
+      - name: Setup problem matchers
+        run: |
+          echo "::add-matcher::${{ runner.tool_cache }}/php.json"
+          echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
       - name: Install dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
           composer update --${{ matrix.stability }} --prefer-dist --no-interaction
-
-      - name: Run static analysis
-        run: vendor/bin/phpstan analyse
-
-      - name: Ensure code structure
-        run: vendor/bin/pint --test
-
-      - name: Run tests
-        run: vendor/bin/pest
+      - name: Execute tests
+        run: vendor/bin/phpunit
