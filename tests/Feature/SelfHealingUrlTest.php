@@ -20,7 +20,7 @@ class SelfHealingUrlTest extends TestCase
 
         $router
             ->middleware([DisableSelfHealingUrls::class, 'web'])
-            ->get('/test-path-unbound/{model}', fn (TestModel $model) => $model->name)
+            ->get('/test-path-unbound/{model}', fn (TestModel $model) => route('test-model-show-unbound', $model))
             ->name('test-model-show-unbound');
     }
 
@@ -61,6 +61,6 @@ class SelfHealingUrlTest extends TestCase
 
         $this->get('/test-path-unbound/'.$model->getKey())
             ->assertStatus(200)
-            ->assertSee($model->name);
+            ->assertSee('/test-path-unbound/'.$model->getKey());
     }
 }
