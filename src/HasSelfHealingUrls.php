@@ -27,20 +27,11 @@ trait HasSelfHealingUrls
 
         $migration = $table->string($column);
 
-        if (! $table->creating()) {
+        if (!$table->creating()) {
             $migration->after($model->getKeyName());
         }
 
         return $migration->unique();
-    }
-
-    /**
-     * Determine the database key that should be used for our
-     * route binding.
-     */
-    public function getRouteBindingKeyName(): string
-    {
-        return 'route_binding_id';
     }
 
     /**
@@ -51,10 +42,9 @@ trait HasSelfHealingUrls
     {
         $attempts = 0;
         $exists = function (self $model) use ($attempts) {
-
             if ($attempts > 3) {
                 throw new \Exception(
-                    class_basename($model).'::generateHealingUniqueId does not have enough '.
+                    class_basename($model) . '::generateHealingUniqueId does not have enough ' .
                     'entropy and failed URL generation. This method should generate a very random ID.'
                 );
             }
@@ -75,6 +65,59 @@ trait HasSelfHealingUrls
     }
 
     /**
+     * Override base method.
+     * Resolve our model from the given parameters.
+     */
+    public function resolveRouteBinding($value, $field = null): ?Model
+    {
+        $model = parent::resolveRouteBinding($value, $field);
+
+        // allow disabling via middleware
+        if (request()->attributes->get('disable_self_healing_urls')) {
+            return $model;
+        }
+
+        $slug = $this->resolveRouteBindingParameters($value)[1] ?? null;
+
+        if ($model && ($model->getRouteBindingSlug() !== $slug)) {
+            abort(301, 'Moved Permanently', ['Location' => $model->getModelUrl()]);
+        }
+
+        return $model;
+    }
+
+    /**
+     * Override base method.
+     * Generate our query to resolve our model from the database
+     * using the route binding key.
+     */
+    public function resolveRouteBindingQuery($query, $value, $field = null)
+    {
+        // allow disabling via middleware
+        if (request()->attributes->get('disable_self_healing_urls')) {
+            return parent::resolveRouteBindingQuery($query, $value, $field);
+        }
+
+        $uniqId = $this->resolveRouteBindingParameters($value)[2] ?? null;
+
+        return $query->where($this->getRouteBindingKeyName(), $uniqId);
+    }
+
+    /**
+     * Override base method.
+     * Determine our absolute URL to this post.
+     */
+    public function getRouteKey(): string
+    {
+        // allow disabling via middleware
+        if (request()->attributes->get('disable_self_healing_urls')) {
+            return parent::getRouteKey();
+        }
+
+        return $this->getRouteBindingSlug() . '-' . $this->getRouteBindingKey();
+    }
+
+    /**
      * Determine the current key/unique ID for our route binding.
      */
     public function getRouteBindingKey(): string
@@ -90,29 +133,6 @@ trait HasSelfHealingUrls
         return substr(uniqid(), -8);
     }
 
-    /**
-     * Determine our absolute URL to this post.
-     */
-    public function getRouteKey(): string
-    {
-        return $this->getRouteBindingSlug().'-'.$this->getRouteBindingKey();
-    }
-
-    /**
-     * Determine the slug that our sel- healing URL should use.
-     */
-    abstract public function getRouteBindingSlug(): string;
-
-    /**
-     * Generate our query to resolve our model from the database
-     * using the route binding key.
-     */
-    public function resolveRouteBindingQuery($query, $value, $field = null)
-    {
-        $uniqId = $this->resolveRouteBindingParameters($value)[2] ?? null;
-
-        return $query->where($this->getRouteBindingKeyName(), $uniqId);
-    }
 
     /**
      * Extract our binding parameters.
@@ -129,19 +149,12 @@ trait HasSelfHealingUrls
     }
 
     /**
-     * Resolve our model from the given parameters.
+     * Determine the database key that should be used for our
+     * route binding.
      */
-    public function resolveRouteBinding($value, $field = null): ?Model
+    public function getRouteBindingKeyName(): string
     {
-        $model = parent::resolveRouteBinding($value, $field);
-
-        $slug = $this->resolveRouteBindingParameters($value)[1] ?? null;
-
-        if ($model && ($model->getRouteBindingSlug() !== $slug)) {
-            abort(301, 'Moved Permanently', ['Location' => $model->getModelUrl()]);
-        }
-
-        return $model;
+        return 'route_binding_id';
     }
 
     /**
@@ -154,6 +167,11 @@ trait HasSelfHealingUrls
             return route(request()->route()->getName(), $this);
         }
 
-        throw new \Exception('Unable to determine self-healing URL. Extend the getModelUri() method');
+        throw new \Exception('Unable to determine self-healing URL. Extend the getModelUrl() method or make sure you are using the route() helper.');
     }
+
+    /**
+     * Determine the slug that our self-healing URL should use.
+     */
+    abstract public function getRouteBindingSlug(): string;
 }
