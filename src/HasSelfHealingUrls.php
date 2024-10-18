@@ -5,12 +5,19 @@ namespace Motomedialab\LaravelSelfHealingUrls;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\ColumnDefinition;
+use Motomedialab\LaravelSelfHealingUrls\Middleware\DisableSelfHealingUrls;
+use Motomedialab\LaravelSelfHealingUrls\Middleware\EnableSelfHealingUrls;
 
 /**
  * @mixin Model
  */
 trait HasSelfHealingUrls
 {
+    /**
+     * Self Healing Urls Active. Can be overriden as default action on Model
+     */
+    protected $selfHealingUrlActive = true;
+
     /**
      * Generate the migration for our healing URL.
      */
@@ -73,7 +80,7 @@ trait HasSelfHealingUrls
         $model = parent::resolveRouteBinding($value, $field);
 
         // allow disabling via middleware
-        if (request()->attributes->get('disable_self_healing_urls')) {
+        if (!$this->selfHealingUrlActive()) {
             return $model;
         }
 
@@ -94,7 +101,7 @@ trait HasSelfHealingUrls
     public function resolveRouteBindingQuery($query, $value, $field = null)
     {
         // allow disabling via middleware
-        if (request()->attributes->get('disable_self_healing_urls')) {
+        if (!$this->selfHealingUrlActive()) {
             return parent::resolveRouteBindingQuery($query, $value, $field);
         }
 
@@ -110,11 +117,11 @@ trait HasSelfHealingUrls
     public function getRouteKey(): string
     {
         // allow disabling via middleware
-        if (request()->attributes->get('disable_self_healing_urls')) {
+        if (!$this->selfHealingUrlActive()) {
             return parent::getRouteKey();
         }
 
-        return $this->getRouteBindingSlug().'-'.$this->getRouteBindingKey();
+        return $this->getRouteBindingSlug() . '-' . $this->getRouteBindingKey();
     }
 
     /**
@@ -167,6 +174,28 @@ trait HasSelfHealingUrls
         }
 
         throw new \Exception('Unable to determine self-healing URL. Extend the getModelUrl() method or make sure you are using the route() helper.');
+    }
+
+    /**
+     * Determine whether the selfHealingUrl should be used or has been disabled via Middleware.
+     */
+    protected function selfHealingUrlActive()
+    {
+        $activeMiddleware = request()->route()?->middleware();
+
+        if ($activeMiddleware) {
+
+            if (in_array(EnableSelfHealingUrls::class, $activeMiddleware)) {
+                $this->selfHealingUrlActive = true;
+            }
+            if (in_array(DisableSelfHealingUrls::class, $activeMiddleware)) {
+                $this->selfHealingUrlActive = false;
+            }
+        } elseif (request()->attributes->get('disable_self_healing_urls')) {
+            $this->selfHealingUrlActive = request()->attributes->get('disable_self_healing_urls');
+            return request()->attributes->get('disable_self_healing_urls');
+        }
+        return $this->selfHealingUrlActive;
     }
 
     /**
