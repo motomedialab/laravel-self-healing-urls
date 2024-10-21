@@ -183,18 +183,18 @@ trait HasSelfHealingUrls
     {
         $activeMiddleware = request()->route()?->middleware();
 
-        if ($activeMiddleware) {
-
-            if (in_array(EnableSelfHealingUrls::class, $activeMiddleware)) {
-                $this->selfHealingUrlActive = true;
-            }
-            if (in_array(DisableSelfHealingUrls::class, $activeMiddleware)) {
-                $this->selfHealingUrlActive = false;
-            }
-        } elseif (request()->attributes->get('disable_self_healing_urls')) {
-            $this->selfHealingUrlActive = request()->attributes->get('disable_self_healing_urls');
-            return request()->attributes->get('disable_self_healing_urls');
+        if ($activeMiddleware && in_array(EnableSelfHealingUrls::class, $activeMiddleware)) {
+            return $this->selfHealingUrlActive = true;
         }
+
+        if ($activeMiddleware && in_array(DisableSelfHealingUrls::class, $activeMiddleware)) {
+            return $this->selfHealingUrlActive = false;
+        }
+
+        if (request()->attributes->has('disable_self_healing_urls')) {
+            return $this->selfHealingUrlActive = request()->attributes->get('disable_self_healing_urls');
+        }
+        
         return $this->selfHealingUrlActive;
     }
 
